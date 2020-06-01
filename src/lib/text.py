@@ -1,5 +1,5 @@
 from tqdm import tqdm
-from pipetools import pipe
+from pipetools import pipe, where
 
 from lib.clean_string import (
     alphanumeric_period_only,
@@ -9,6 +9,10 @@ from lib.clean_string import (
     regulate_punctuation,
     remove_paren,
 )
+
+#
+# Preprocessing Tools
+#
 
 
 def parse_text_to_word_sentences(
@@ -84,48 +88,38 @@ def parse_text_to_word_sentences(
         | alphanumeric_period_only
     )
 
+    strip_word_in_sentence = (
+        pipe
+        | (map, lambda word: word.strip())
+        | where(lambda stripped: len(stripped) > 0)
+        | list
+    )
+
     word_sentences = [
-        [
-            clean_word
-            for clean_word in map(lambda word: word.strip(), word_sentence)
-            if len(clean_word) > 0
-        ]
-        if len(word_sentence) > sentence_min_length
-        else []
+        strip_word_in_sentence(sentence.split(" "))
         for paragraph in input_text.split("\n")
-        for word_sentence in map(
-            lambda sentence: sentence.split(" "), text_cleaner(paragraph).split(".")
-        )
+        for sentence in text_cleaner(paragraph).split(".")
     ]
 
     del input_text
-    return word_sentences
+
+    return [
+        word_sentence
+        for word_sentence in word_sentences
+        if len(word_sentence) > sentence_min_length
+    ]
 
 
-def build_word_frequency_map(all_words, output_sorted=True):
-    frequency_map = {}
-
-    for word in tqdm(all_words):
-        if word in frequency_map.keys():
-            frequency_map[word] += 1
-        else:
-            frequency_map[word] = 1
-
-    if output_sorted:
-        return sorted(frequency_map.items(), reverse=True, key=lambda x: x[1])
-
-    return frequency_map
-
-
-def get_top_frequent_words(all_words, many=1000, include_frequency=False):
-    sorted_frequency_map = build_word_frequency_map(all_words)
-    top_frequent_words = list(map(lambda x: x[0], sorted_frequency_map[:many]))
-
-    if include_frequency:
-        top_frequency = list(map(lambda x: x[1], sorted_frequency_map[:many]))
-        return top_frequent_words, top_frequency
-
-    return top_frequent_words
+def flat_clip_in_words(clip):
+    return [
+        "_BOC_",
+        *[
+            word
+            for sentence in parse_text_to_word_sentences(clip)
+            for word in ["_BOS_", *sentence, "_EOS_"]
+        ],
+        "_EOC_",
+    ]
 
 
 def build_encoder_decoder_from_vocab(vocab, has_unknown=False):
@@ -161,3 +155,35 @@ def build_encoder_decoder_from_vocab(vocab, has_unknown=False):
         decoder[vocab_len + 5] = "?"
 
     return encoder, decoder
+
+
+#
+# stats tool
+#
+
+
+def build_word_frequency_map(all_words, output_sorted=True):
+    frequency_map = {}
+
+    for word in tqdm(all_words):
+        if word in frequency_map.keys():
+            frequency_map[word] += 1
+        else:
+            frequency_map[word] = 1
+
+    return frequency_map
+
+
+def get_top_frequent_words(all_words, many=1000, include_frequency=False):
+    frequency_map = build_word_frequency_map(all_words)
+    sorted_frequency_map = sorted(
+        frequency_map.items(), reverse=True, key=lambda x: x[1]
+    )
+
+    top_frequent_words = list(map(lambda x: x[0], sorted_frequency_map[:many]))
+
+    if include_frequency:
+        top_frequency = list(map(lambda x: x[1], sorted_frequency_map[:many]))
+        return top_frequent_words, top_frequency
+
+    return top_frequent_words

@@ -1,5 +1,4 @@
 from lxml import etree
-from pprint import pprint
 from random import shuffle
 from tqdm import tqdm
 import numpy as np
@@ -47,12 +46,6 @@ def load_TED_dataset(include_keywords=False, include_summary=False, project_path
             return content_text, summary_text
 
         return content_text
-
-
-def show_text_samples(text, number_of_sample=10, sample_size=1000):
-    for i in range(number_of_sample):
-        position = int(len(text) / 20) * i
-        pprint(text[position : position + sample_size])
 
 
 def drop_data_of_label(dataset, target, drop_number):
