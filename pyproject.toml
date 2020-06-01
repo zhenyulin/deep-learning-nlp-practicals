@@ -1,0 +1,34 @@
+[tool.poetry]
+name = "deep-learning-nlp-practicals"
+version = "0.1.0"
+description = ""
+authors = ["Zhenyu Lin <zhenyu.lyn@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.6"
+pandas = "*"
+matplotlib = "*"
+scipy = "*"
+numpy = "*"
+statsmodels = "*"
+gensim = "^3.8.1"
+lxml = "^4.5.0"
+seaborn = "^0.10.0"
+Cython = "^0.29.16"
+sklearn = "^0.0"
+tqdm = "^4.43.0"
+pipetools = "^0.3.5"
+tensorflow = "^2.1.0"
+tensorflow-estimator = "2.1.0"
+
+[tool.poetry.dev-dependencies]
+ipykernel = "^5.2.0"
+jupyterthemes = "^0.20.0"
+notebook = "^6.0.3"
+pytest = "*"
+jupyter-tabnine = "^1.1.0"
+black = "^19.10b0"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
